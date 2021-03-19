@@ -1,0 +1,46 @@
+---
+title: "StaGen545 HW4 JKGWAS"
+author: "Pabitra Joshi and Lindsey Kornowske"
+date: "20210317"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '6'
+  word_document:
+    toc: yes
+    toc_depth: '6'
+---
+
+# Data and Functions
+
+```{r}
+X = read.csv(file = "./../datasets/mdp_numeric.txt", header = TRUE, sep ="");
+y = read.csv(file = "./../datasets/CROPS545_Phenotype.txt", header = TRUE, sep = "");
+CV = read.csv(file = "./../datasets/CROPS545_Covariates.txt", header = TRUE, sep = "");
+SNP = read.csv(file = "./../datasets/mdp_SNP_information.txt", header = TRUE, sep = "");
+
+#library(JKGWAS)
+```
+
+
+
+Require the following packages for the R package:
+tidyverse
+
+# Perform GWAS
+
+```{r}
+## Get Principal Components with JKPCA()
+PC = JKPCA(X, CV, npc = 10);
+
+## Perform GWAS by GLM with JKGLM()
+Pvals = JKGLM(X = X, y = y, CV = CV, PC = PC);
+
+## Visualize GWAS by QQ Plot with JKQQ()
+JKQQ(Pvals);
+
+## Visualize GWAS by Manhattan Plot with JKManhattan()
+JKManhattan(Pvals = Pvals, SNP = SNP, QTN = QTN);
+
+```
+
