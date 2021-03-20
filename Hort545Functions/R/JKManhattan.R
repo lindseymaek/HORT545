@@ -1,7 +1,7 @@
 #' Manhattan Plot for GWAS Visualization
 #' 
 #'  
-#' @description Visualize the GWAS by GLM results by Manhattan plot. User can also specify QTN
+#' @description Visualize the GWAS by GLM results by Manhattan plot. User can also specify QTN.
 #' 
 #' 
 #' @param Pvals Input vector of Pvals such as an object returned by the JKGLM function
@@ -29,6 +29,7 @@ JKManhattan = function(Pvals, SNP, sig,cutoff = NULL, QTN = NULL){
   abline(h=(-log10(sig.cutoff)), lwd=2, col = "black")
   if(!is.null(QTN)){
     points(QTN,-log10(Pvals[QTN]), pch=19)
+    abline(v = QTN, lty = 2, lwd = 1, col = "black")
   }
 }
 

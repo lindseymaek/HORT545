@@ -1,9 +1,20 @@
+#' Compute SNP p-values for GWAS by GLM 
+#' 
+#' @description Compute p-values for the association tests between phenotype and SNPs by Generalized Linear Model fitted for the fixed effects of SNP, with option to include Principal Compoenents and Covariates.
+#' 
+#' @param X Matrix containing genotype data organized with SNPs as columns, individuals as rows
+#' @param y Matrix containing SNP positions and chromosomes corresponding to X
+#' @param CV Optional argument to include matrix containing covariates. Default is NULL.
+#' @param PC Optional argument to include matrix containing principal components such as an object of JKPCA. Default is NULL.
+#' 
+#' @return Pvals array of length ncol of X for SNPs from fitted GLM
+#' @export
+#'
 ## GWAS by GLM Function
 
-JKGLM = function(X, y, CV=NULL, PC=NULL, npc = 2){
+JKGLM = function(X, y, CV=NULL, PC=NULL){
   
   X = dplyr::select_if(X, is.numeric);
-  CV = dplyr::select_if(CV, is.numeric);
   y = dplyr::select_if(y, is.numeric);
 
   #get dimensions of X
@@ -23,19 +34,21 @@ JKGLM = function(X, y, CV=NULL, PC=NULL, npc = 2){
     } else {
       ## No user input for Covariate and Principal Components
       ## only snps are modeled
-      if(is.null(CV) & is.null(PC)){
+      if(is.null(CV) && is.null(PC)){
         JK = as.matrix(cbind(1, snp));
       ## User input for Covariates only
       ## snps and covariates are modeled
-      } else if(!is.null(CV) & is.null(PC)){
+      } else if(!is.null(CV) && is.null(PC)){
+        CV = dplyr::select_if(CV, is.numeric);
         JK = as.matrix(cbind(1,CV,snp));
       ## User input for  PCs only
       ## pcs and snps are modeled
-      } else if(is.null(CV) & !is.null(PC)){
+      } else if(is.null(CV) && !is.null(PC)){
         JK = as.matrix(cbind(1,PC,snp));
       ## User input for both PCs and Covariates
       ## snps, PCs, CVs are all modeled
-      } else if(!is.null(CV) & !is.null(PC)){
+      } else if(!is.null(CV) && !is.null(PC)){
+        CV = dplyr::select_if(CV, is.numeric);
         JK = as.matrix(cbind(1,CV,PC,snp));
       }
     
