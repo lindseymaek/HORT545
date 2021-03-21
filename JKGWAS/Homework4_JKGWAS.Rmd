@@ -20,13 +20,22 @@ output:
 
 # Data and Functions
 
+The class maize datasets were used for this assignment.
+
 ```{r}
+source("http://www.zzlab.net/StaGen/2021/R/G2P.R")
+source("http://www.zzlab.net/StaGen/2021/R/GWASbyCor.R")
+library(JKGWAS)
+
+# Genotype Data
 X = read.csv(file = "./../datasets/mdp_numeric.txt", header = TRUE, sep ="");
+# Phenotype Data
 y = read.csv(file = "./../datasets/CROPS545_Phenotype.txt", header = TRUE, sep = "");
+# Covariates Data
 CV = read.csv(file = "./../datasets/CROPS545_Covariates.txt", header = TRUE, sep = "");
+# SNP information data
 SNP = read.csv(file = "./../datasets/mdp_SNP_information.txt", header = TRUE, sep = "");
 
-#library(JKGWAS)
 ```
 
 # Question 1 and 2
@@ -48,7 +57,6 @@ The JKGWAS Package contains four functions that are summarized briefly as follow
 \textbf{(3)	Develop a user manual and tutorials. Name your package and create a logo. (20 points).}
 
 The JKGWAS package is named for Pabitra Joshi and Lindsey Kornowske, the label is displayed in Figure \ref{fig:logo}.
-
 
 \begin{figure*}[htbp]
 \begin{center}
@@ -72,10 +80,10 @@ PC = JKPCA(X, CV, npc = 10);
 Pvals = JKGLM(X = X, y = y, CV, PC);
 
 ## Visualize GWAS by QQ Plot with JKQQ()
-#JKQQ(Pvals);
+JKQQ(Pvals);
 
 ## Visualize GWAS by Manhattan Plot with JKManhattan()
-#JKManhattan(Pvals = Pvals, SNP = SNP, QTN = QTN);
+JKManhattan(Pvals = Pvals, SNP = SNP,sigcutoff = NULL, QTN = QTN );
 
 ```
 # Question 5
@@ -83,13 +91,10 @@ Pvals = JKGLM(X = X, y = y, CV, PC);
 \textbf{(5)	Demonstrate that your method is superior to the competing method (GWASbyCor) through simulation with at least 30 replicates (25 points).}
 
 ```{r}
-compareGWASnTimes = function(n = 100, X = X, qtn = 10) {
+compareGWASnTimes = function(n = 3, X = X, qtn = 10) {
    X = dplyr::select_if(X, is.numeric);
-   CV = dplyr::select_if(CV, is.numeric);
    # create array to store average for each iteration
-  store.means = array();
-  store.sig = array();
-  store.total = array();
+  store.truepos = data.frame();
 
   for(i in 1:n){
 # first, simulate phenotype
@@ -102,43 +107,57 @@ G2P.sim = G2P(X= X,
 
 # get QTN positions in GD data
 G2P.sim.qtn = G2P.sim$QTN.position;
+
 #get vector of pvals
+#by correlation
 p.list.cor = GWASbyCor(X, G2P.sim$y);
+p.list.cor = as.matrix(t(p.list.cor));
 
+y = as.data.frame(G2P.sim$y);
+#by glm
+p.list.glm = JKGLM(X, y, CV, PC);
+p.list.glm = as.matrix(p.list.glm)
 
-#sort vector of pvals as increasing
-p.index.cor =sort(p.list.cor, decreasing = FALSE);
-p.sig.cor = p.index.cor[p.index.cor < 0.05/length(p.index.cor)];
+p.df = as.data.frame(cbind(p.list.cor, p.list.glm));
+names(p.df) = c("COR", "GLM");
 
+nc = ncol(p.df);
+for(j in 1:nc){
+  p.index = p.df[,j];
 #identify qtn pvals
-qtn.p.cor = p.list.cor[ G2P.sim.qtn]
+qtn.p = p.index[G2P.sim.qtn];
+  #sort vector of pvals as increasing
+p.index.sort =sort(p.index, decreasing = FALSE);
+p.sig.cor = p.index.sort[p.index.sort < 0.05/length(p.index.sort)];
+
 
 #find all qtn pvals in total list
-truePos.cor=intersect(p.sig.cor,qtn.p.cor);
+truePos.cor=intersect(p.sig.cor, qtn.p);
 #find all significant pvals not in qtn list
-falsePos.cor=setdiff(p.sig.cor, qtn.p.cor);
+falsePos.cor=setdiff(p.sig.cor, qtn.p);
 #save the number of true positives for this iteration
-store.means[i] = length(truePos.cor);
-
-p.list.glm = JKGLM(X, y);
-
-
+store.truepos[i,j] = length(truePos.cor);
 
   }
-  #get numeric count data
-  store.means = as.numeric(as.character(store.means));
-  #combine into single df for summary stats
-  res = as.data.frame(cbind(store.means, store.sig, store.total));
-  #compute summary statistics
-  means.result = res %>% summarize_if(is.numeric, .funs = c("mean", "sd"));
-  means.result;
+
+}
+names(store.truepos) = c("COR", "GLM");
+store.truepos;
+#summary(store.truepos);
 }
 
+test = compareGWASnTimes(n=30, X = X, qtn = 10);
+
+mean(test$COR)
+mean(test$GLM)
 ```
+
 
 
 # Extra Credit
 
 \textbf{(6)	Demonstrate that your package is better than BLINK C version (http://zzlab.net/blink) on either statistical power or speed (25 points). }
 
+```{r}
+```
 

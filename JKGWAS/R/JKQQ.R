@@ -1,4 +1,17 @@
-##qqplot
+#' QQ plot
+#'
+#'
+#' @description Function to generate QQ-plot
+#'
+#' @param Pvals Input vector of Pvals such as an object returned by the JKGLM function
+#'
+#'
+#' @return QQplot with user inputs.
+#'
+#' @export
+#'
+#'
+
 
 JKQQ = function(Pvals){
 

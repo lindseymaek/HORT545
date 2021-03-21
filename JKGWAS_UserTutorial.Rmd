@@ -1,0 +1,195 @@
+---
+title: "Package JKGWAS User Tutorial"
+author: "Pabitra Joshi and Lindsey Kornowske"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    keep_tex: true
+    toc: yes
+    toc_depth: '6'
+---
+
+<style type="text/css">
+
+h1.title {
+  font-size: 38px;
+  color: black;
+  text-align: center;
+}
+h4.author { /* Header 4 - and the author and data headers use this too  */
+    font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
+  color: black;
+  text-align: center;
+}
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: black;
+  text-align: center;
+}
+</style>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+<!-- test inserting image-->
+
+<center>
+
+![](JKGWAS_logo.png){#id .class width=300 height=300px}
+
+</center>
+
+<p>&nbsp;</p>
+
+<center> <font size="6"> **Joshi Kornowske Genome Wide Association Study (JKGWAS)** </font> </center> 
+
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+### **Table of contents**
+#### Introduction LK
+#### Description of package functions PJ
+#### Getting started LK
+#### Required Inputes PJ
+#### Optional Inputes LK
+#### Outputs and Examples PB
+#### Examples with know QTNs LK
+#### Rapid run PB
+#### Rapid run options LK
+#### Frequently asked questions PB
+#### Further Information LK
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+### **Introduction**
+
+
+
+### **Description of package functions**
+
+
+
+### **Getting started**
+
+
+```{r,warning=FALSE}
+#code to install package from github
+#install.packages("devtools")
+library(devtools)
+```
+Next using the code below download and install the package GWhEAT from Github. The bottom two line of code in the chunk below make sure the dependencies GWhEAT relies on are also downloaded and installed. 
+```{r,warning=FALSE}
+#install package
+install_github("lindseymaek/HORT545/JKGWAS")
+library(JKGWAS)#package name
+```
+In order to have an effective tutorial you’ll need some data to play with, this code below downloads and loads into your environment data used for this tutorial. 
+```{r}
+if (!file.exists("GAPIT_Tutorial_Data.zip"))
+{
+  download.file("http://zzlab.net/GAPIT/GAPIT_Tutorial_Data.zip", destfile = "GAPIT_Tutorial_Data.zip")
+  unzip("GAPIT_Tutorial_Data.zip")
+}
+download.file("http://zzlab.net/GAPIT/data/CROP545_Covariates.txt", destfile = "CROPS545_Covariates.txt")
+download.file("http://zzlab.net/GAPIT/data/CROP545_Phenotype.txt", destfile = "CROPS545_Phenotype.txt")
+# Import the GAPIT demo data genotypes
+gt_scan <- data.frame(read.table("GAPIT_Tutorial_Data/mdp_numeric.txt", header = T, stringsAsFactors = F, sep = "\t", nrows = 1))
+classes <- sapply(gt_scan, class)
+genotypes <- data.frame(read.table("GAPIT_Tutorial_Data/mdp_numeric.txt", header = T, row.names = 1, colClasses = classes, stringsAsFactors = F, sep = "\t"))
+GM <- read.table("GAPIT_Tutorial_Data/mdp_SNP_information.txt", header = T, stringsAsFactors = F, sep = "\t")
+CV <- read.table("CROPS545_Covariates.txt", header = T, stringsAsFactors = F, sep = "\t")
+phenotypes <- read.table("CROPS545_Phenotype.txt", header = T, stringsAsFactors = F, sep = "\t")
+```
+### **Required Inputes**
+
+There are three data components required to run GWhEAT, the SNP data the phenotype(s) and a map showing the chromosome and positions of each SNP. The SNP data must be numeric coded as “0”, “1” and “2” where the 0 stands for homozygous for parent A, 2 stands for homozygous for parent B and 1 is for heterozygous SNP calls. Below is an example showing the first 5 rows and columns of our tutorial SNP data.
+```{r}
+genotypes[1:5,1:5]
+```
+The phenotype should be integers, negative or positive that correspond to each individual. Note: Below I have the head of the phenotype printed with the taxa column still included, before running GWhEAT you will need to remove the taxa column leaving only the phenotypic values for the function to work. 
+```{r}
+phenotypes[1:5,1:2]
+```
+The final piece of information needed for GWhEAT to work is a genetic map of the SNPs. This map must have the SNP name and the chromosome it’s on as well as the position on that chromosome. This genetic map is needed in order to produce the Manhattan plot of the results.
+```{r}
+GM[1:5,1:3]
+```
+### **Optional Inputes**
+
+The optional imputes for GWhEAT are the covariates which if used can help increases the power of the GWAS. The covariates mush be integers much like the phenotype values. Below is an example from the tutorial data.
+```{r}
+CV[1:5,1:3]
+```
+Other imputes include number of PCAs to use, with the default being set to three. The significance threshold (Cutoff) which can be set to the exact -log(10) of the p-value you want or the default of 0.05/number of SNPs. There are also some options you can use to suppress the plots automatically generated. To best show these options I will run a few examples below.  
+
+### **Outputs and Examples**
+Outputs from GWhEAT are a table with information on the PCA, Graphs showing variance explained by the PC, scatter plots of the PC used, a manhattan plot and a  QQ-plot. A csv file with all SNPs and associated p-values and a table with the power and type-1 error can also be included as outputs.
+```{r,warning=FALSE}
+phenotypes_n_1=phenotypes[,2]#remember to remove the first column from the phenotype data before running
+Example1=GWASapply(pheno=phenotypes_n_1, geno=genotypes,Cov=CV, GM=GM, PCA.M = 3, plots=TRUE, messages=TRUE, trait="Example1_phenotype")
+```
+
+### **Examples with know QTNs**
+In order to fully demonstrate GWhEAT functions, I am going to simulate some QTN effects using the function G2P. All G2Pis doing is generating effects and randomly assigning then to different SNPs. This will allow me to run GWhEAT and be able to determine it’s accuracy. 
+\
+\
+As we can see in the Manhattan plot and from the printed massages 8 significant SNPs were detected. 4 of them in black are true positives 2 in blue are false positives and the two in red are false negatives. Note some of the lines are very close to each other and can be hard to see which is why it’s nice to have messages = TRUE so that important findings are printed into the R console. 
+
+```{r,warning=FALSE}
+source("http://www.zzlab.net/StaGen/2020/R/G2P.R")
+NQTN = 6 #specify number of QTN
+h2 = 0.75 #heritability
+alpha = 0.6 #alpha value
+distribution = "normal" #specify distribution
+set.seed(66) # to get duplicatable results
+mySim=G2P(genotypes, h2, alpha, NQTN, distribution)
+Example2=GWASapply(pheno=mySim$y, geno=genotypes, GM=GM, PCA.M=3,QTN.position=mySim$QTN.position, plots=TRUE, messages=TRUE, trait="Example2_phenotype")
+```
+
+###  **Rapid run**
+As sequencing data becomes more accessible and data sets become larger a necessity of GWAS packages is computational speed. In light of this we created a function within GWhEAT that runs the GWAS in a rapid manor called “GWASapply_rapid”. “GWASapply_rappid” works the same as GWASapply but will not print the Manhattan or other plots and is able to run more quickly.    
+```{r,warning=FALSE}
+Example3=GWASapply_rapid(pheno=phenotypes_n_1, geno=genotypes, Cov=CV, PCA.M = 3,cutoff=NULL)
+```
+
+###  **Rapid run options**
+
+After running GWASapply_rapid you can always create individual plots as shown below. The manhattan and QQ-plot functions allow flexibility in designing your own output.  
+
+```{r,warning=FALSE}
+manhattan_plot(GM,Example3$P.value.res, trait="manhattanPlot_Example3",FP = Example3$False.Positive, TP = Example3$True.Positive)
+qq_plot(GM,Example3$P.value.res,QTN.position, trait = "qq_plot_Example3")
+```
+
+### **Frequently asked questions**
+
+1. Where can I get GWhEAT? GWhEAT is currently only available on github via Samuel Prather’s public repository found at https://github.com/stp4freedom/GWhEAT. 
+\
+\
+2. How to download GWhEAT? Please refer the “Getting started” section above where I show how to download and install GWhEAT using devtools.
+\
+\
+3. What SNP format does GWhEAT take? Currently GWhEAT only accepts SNP data in numerical form.
+\
+\
+4. What are the required inputs to run GWhEAT? You will need SNP data in numerical form, phenotypic data and a genetic map that has SNP name, Chromosome and position on chromosome. Without all three components GWhEAT will not be able to run successfully.
+\
+\
+5. How is GWASapply_rapid different than GWASapply? Both GWASapply and GWASapply_rapid run the calculations the same way. The only difference is GWAsapply_rapid will not give you any of the output automatically, which makes it run faster and allows the user the develop their own output.
+\
+\
+6. Where can I get help with issues regarding GWhEAT? All questions should be directed to Samuel Prather at stp4freedom@gmail.com.
+\
+\
+7. Are there other R packages that can perform GWAS? Yes, I would strongly recommend you check out the packaged GAPIT http://www.zzlab.net/GAPIT/ as it has a much wider range of options and functions.
+
+
+
+### **Further Information**
+
+For more information on individual functions please see the “Reference_Manual.pdf” or type ?FUNCITON_NAME into the R console, this will pull up specific information of each function inside GWhEAT. For example typing ?manhattan_plot will pull of the help page with details about the function that creates the Manhattan plots.

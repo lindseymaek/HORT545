@@ -1,4 +1,4 @@
-Package: Hort545Functions
+Package: JKGWAS
 Type: Package
 Title: Contains functions used for HORT545 class assignments.
 Version: 0.1.0
@@ -8,3 +8,4 @@ Description: Package contains functions pertaining to tasks necessary for the im
 License: MIT
 Encoding: UTF-8
 LazyData: false
+RoxygenNote: 7.1.1

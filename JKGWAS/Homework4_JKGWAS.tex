@@ -120,14 +120,20 @@
 \hypertarget{data-and-functions}{%
 \section{Data and Functions}\label{data-and-functions}}
 
+The class maize datasets were used for this assignment.
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{X =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/mdp\_numeric.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =}\StringTok{""}\NormalTok{);}
-\NormalTok{y =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/CROPS545\_Phenotype.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =} \StringTok{""}\NormalTok{);}
-\NormalTok{CV =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/CROPS545\_Covariates.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =} \StringTok{""}\NormalTok{);}
-\NormalTok{SNP =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/mdp\_SNP\_information.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =} \StringTok{""}\NormalTok{);}
+\KeywordTok{library}\NormalTok{(JKGWAS)}
 
-\CommentTok{\#library(JKGWAS)}
+\CommentTok{\# Genotype Data}
+\NormalTok{X =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/mdp\_numeric.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =}\StringTok{""}\NormalTok{);}
+\CommentTok{\# Phenotype Data}
+\NormalTok{y =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/CROPS545\_Phenotype.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =} \StringTok{""}\NormalTok{);}
+\CommentTok{\# Covariates Data}
+\NormalTok{CV =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/CROPS545\_Covariates.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =} \StringTok{""}\NormalTok{);}
+\CommentTok{\# SNP information data}
+\NormalTok{SNP =}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"./../datasets/mdp\_SNP\_information.txt"}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{sep =} \StringTok{""}\NormalTok{);}
 \end{Highlighting}
 \end{Shaded}
 
@@ -137,7 +143,12 @@
 \textbf{(1) The package should contain at least three input: y, X , and C that are R objects of numeric data frame. Their dimensions are n by 1, n by m, and n by t corresponding to phenotype, genotype and covariate data, where n is number of individuals, m is number of markers, and t is number of covariates. The function should return probability values with dimension of 1 by m for the association tests between phenotype and markers. Markers are tested one at a time with covariates in C included as covariates (15 points).
 (2) The package should perform PCA and incorporate PCs as cofactors for GWAS.  Your package should also automatically exclude the PCs that are in linear dependent to the covariates provided by users. (25 points).}
 
-The JKGWAS Package contains four functions:
+\hypertarget{jkgwas-summary}{%
+\subsection{JKGWAS Summary}\label{jkgwas-summary}}
+
+The JKGWAS Package contains four functions that are summarized briefly
+as follows, more information is located in the JKGWAS Package
+documentation:
 
 \par
 
@@ -185,6 +196,8 @@ label is displayed in Figure \ref{fig:logo}.
 \end{center}
 \end{figure*}
 
+The JKGWAS package documentation is provided in a separate file.
+
 \hypertarget{question-4}{%
 \section{Question 4}\label{question-4}}
 
@@ -196,7 +209,7 @@ label is displayed in Figure \ref{fig:logo}.
 \CommentTok{\#PC = JKPCA(X, CV, npc = 10);}
 
 \CommentTok{\#\# Perform GWAS by GLM with JKGLM()}
-\CommentTok{\#Pvals = JKGLM(X = X, y = y, CV = CV, PC = PC);}
+\CommentTok{\#Pvals = JKGLM(X = X, y = y, CV, PC);}
 
 \CommentTok{\#\# Visualize GWAS by QQ Plot with JKQQ()}
 \CommentTok{\#JKQQ(Pvals);}
@@ -214,54 +227,60 @@ label is displayed in Figure \ref{fig:logo}.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# compareGWASnTimes = function(n = 100, X = X, qtn = 10) \{}
-\CommentTok{\#   \# create array to store average for each iteration}
+\CommentTok{\#    X = dplyr::select\_if(X, is.numeric);}
+\CommentTok{\#    \# create array to store average for each iteration}
 \CommentTok{\#   store.means = array();}
 \CommentTok{\#   store.sig = array();}
 \CommentTok{\#   store.total = array();}
-\CommentTok{\#   }
+\CommentTok{\# }
 \CommentTok{\#   for(i in 1:n)\{}
 \CommentTok{\# \# first, simulate phenotype}
 \CommentTok{\#    \# same parameters as Q2{-}4}
-\CommentTok{\# G2P.sim = G2P(X=new.X, }
-\CommentTok{\#              h2=.75,}
+\CommentTok{\# G2P.sim = G2P(X= X,}
+\CommentTok{\#              h2= 0.75,}
 \CommentTok{\#              alpha=1,}
 \CommentTok{\#              NQTN=qtn,}
 \CommentTok{\#              distribution="norm");}
+\CommentTok{\# }
 \CommentTok{\# \# get QTN positions in GD data}
 \CommentTok{\# G2P.sim.qtn = G2P.sim$QTN.position;}
 \CommentTok{\# }
-\CommentTok{\# \#get array of pvals }
-\CommentTok{\# p.list = GWASbyCor(new.X, G2P.sim$y);}
-\CommentTok{\# \#sort array of pvals as increasing }
-\CommentTok{\# p.index=sort(p.list, decreasing = FALSE);}
-\CommentTok{\# p.max10=p.index[1:10];}
+\CommentTok{\# \#get vector of pvals}
+\CommentTok{\# }
+\CommentTok{\# \#by correlation}
+\CommentTok{\# p.list.cor = GWASbyCor(X, G2P.sim$y);}
+\CommentTok{\# }
+\CommentTok{\# \#by glm}
+\CommentTok{\# p.list.glm = JKGLM(X, y, CV, PC);}
+\CommentTok{\# }
+\CommentTok{\# p.df = as.matrix(cbind(p.list.cor, p.list.glm));}
+\CommentTok{\# names(p.df) = c("COR", "GLM");}
+\CommentTok{\# }
+\CommentTok{\# for(j in 1:ncol(p.df))\{}
+\CommentTok{\#   p.index = p.df[,i]}
+\CommentTok{\# \}}
+\CommentTok{\# }
+\CommentTok{\# \#sort vector of pvals as increasing}
+\CommentTok{\# p.index.cor =sort(p.list.cor, decreasing = FALSE);}
+\CommentTok{\# p.sig.cor = p.index.cor[p.index.cor \textless{} 0.05/length(p.index.cor)];}
 \CommentTok{\# }
 \CommentTok{\# \#identify qtn pvals}
-\CommentTok{\# qtn.p = p.list[ G2P.sim.qtn]}
+\CommentTok{\# qtn.p.cor = p.list.cor[ G2P.sim.qtn]}
 \CommentTok{\# }
-\CommentTok{\# }\AlertTok{\#\#\#}\CommentTok{ Question 3}
 \CommentTok{\# \#find all qtn pvals in total list}
-\CommentTok{\# truePos=intersect(p.max10,qtn.p);}
+\CommentTok{\# truePos.cor=intersect(p.sig.cor,qtn.p.cor);}
 \CommentTok{\# \#find all significant pvals not in qtn list}
-\CommentTok{\# falsePos=setdiff(p.max10, qtn.p);}
+\CommentTok{\# falsePos.cor=setdiff(p.sig.cor, qtn.p.cor);}
 \CommentTok{\# \#save the number of true positives for this iteration}
-\CommentTok{\# store.means[i] = length(truePos);}
+\CommentTok{\# store.means[i] = length(truePos.cor);}
 \CommentTok{\# }
-\CommentTok{\# }\AlertTok{\#\#\#}\CommentTok{ Question 4}
-\CommentTok{\# \# get p value of 7th qtn}
-\CommentTok{\# p.QTN7 = sort(qtn.p, decreasing = TRUE);}
-\CommentTok{\# p.QTN7 = p.QTN7[7];}
-\CommentTok{\# \# find all pvals in list that are more significant}
-\CommentTok{\# p.below.qtn7 = p.index[p.index \textless{} p.QTN7];}
-\CommentTok{\# \# save this number}
-\CommentTok{\# store.sig[i] = length(p.below.qtn7)}
-\CommentTok{\# \# total pvals without NAs}
-\CommentTok{\# store.total[i] = length(p.index) }
+\CommentTok{\# p.list.glm = JKGLM(X, y, CV, PC);}
 \CommentTok{\# }
+\CommentTok{\# \}}
 \CommentTok{\# }
 \CommentTok{\#   \}}
 \CommentTok{\#   \#get numeric count data}
-\CommentTok{\#   store.means = as.numeric(as.character(store.means)); }
+\CommentTok{\#   store.means = as.numeric(as.character(store.means));}
 \CommentTok{\#   \#combine into single df for summary stats}
 \CommentTok{\#   res = as.data.frame(cbind(store.means, store.sig, store.total));}
 \CommentTok{\#   \#compute summary statistics}
