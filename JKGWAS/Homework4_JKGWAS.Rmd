@@ -20,7 +20,7 @@ output:
 
 # Data and Functions
 
-The class maize datasets were used for this assignment.
+The class maize datasets were used for this assignment. They are available from "http://www.zzlab.net" 
 
 ```{r}
 source("http://www.zzlab.net/StaGen/2021/R/G2P.R")
@@ -66,7 +66,7 @@ The JKGWAS package is named for Pabitra Joshi and Lindsey Kornowske, the label i
 \end{center}
 \end{figure*}
 
-The JKGWAS package documentation is provided in a separate file.
+The JKGWAS package documentation is provided in a separate file, "JKGWAS$\_$0.1.0.pdf" and further information about its use are provided in the user tutorial, "JKGWAS$\_$UserTutorial.pdf"
 
 # Question 4
 
@@ -83,18 +83,53 @@ Pvals = JKGLM(X = X, y = y, CV, PC);
 JKQQ(Pvals);
 
 ## Visualize GWAS by Manhattan Plot with JKManhattan()
-JKManhattan(Pvals = Pvals, SNP = SNP,sigcutoff = NULL, QTN = QTN );
+JKManhattan(Pvals = Pvals, SNP = SNP,sigcutoff = NULL );
 
 ```
+First, GWAS was performed with the phenotype data provided. In the Manhattan plot below, we can see that 3 SNP were detected, but because we do not have information about the QTNs, we do not know whether these significant observations represent true positives or not. Next, we use a simulated phenotype to better assess the performance of the JKGWAS approach.
+
+## QTN Simulation
+
+```{r}
+G2P.sim = G2P(X= X,
+             h2= 0.75,
+             alpha=1,
+             NQTN=qtn,
+             distribution="norm");
+
+G2P.y = as.data.frame(G2P.sim$y);
+
+Pvals.sim = JKGLM(X = X, y = G2P.y, CV, PC);
+
+## Visualize GWAS by QQ Plot with JKQQ()
+JKQQ(Pvals.sim);
+
+## Visualize GWAS by Manhattan Plot with JKManhattan()
+JKManhattan(Pvals = Pvals.sim, SNP = SNP, sigcutoff = NULL, QTN = G2P.sim$QTN.position );
+
+```
+
+If we use a simulated phenotype instead of the provided phenotype data, 50% of our 10 QTN are detected correctly. With 5 QTN detected out of 8 significant SNPs total, that is a True Positive rate of 62.5%.
+
 # Question 5
 
 \textbf{(5)	Demonstrate that your method is superior to the competing method (GWASbyCor) through simulation with at least 30 replicates (25 points).}
 
+In order to compare GWASbyCor and GWASbyGLM, we created a function called compareGWASnTimes. The function arguments are: \par
+\texbullet n, the number of times to run the simulation \par
+\textbullet X, the numeric genomic data \par
+\textbullet qtn, the number of qtns to be simulated \par
+\textbullet CV, the covariate matrix to be passed to the JKGLM function. The default value is NULL \par
+\textbullet PC, the principal component matrix to be passed to the JKGLM function. The default value is NULL \par
+
+For each iteration, the G2P function simulates the phenotype for X with a heritability of 0.75. Then, the output phenotype is used to compute the GWAS by cor and the GWAS by GLM. The number of True Positives, as well as the True Positive Rate, which is calculated as the number of QTNs that is correctly identified out of all significant SNPs (p-value is smaller than 0.05/total pvalues, Bonferroni correction is automatic). These two dataframes are output as a list, where the first item is the count of true positive QTNs and the second item is the true positive rate.
+
 ```{r}
-compareGWASnTimes = function(n = 3, X = X, qtn = 10) {
+compareGWASnTimes = function(n = 10, X, qtn = 10, CV = NULL, PC = NULL) {
    X = dplyr::select_if(X, is.numeric);
    # create array to store average for each iteration
   store.truepos = data.frame();
+  store.rate = data.frame();
 
   for(i in 1:n){
 # first, simulate phenotype
@@ -137,21 +172,34 @@ truePos.cor=intersect(p.sig.cor, qtn.p);
 falsePos.cor=setdiff(p.sig.cor, qtn.p);
 #save the number of true positives for this iteration
 store.truepos[i,j] = length(truePos.cor);
+store.rate[i,j] = length(truePos.cor)/length(p.sig.cor);
 
   }
 
 }
 names(store.truepos) = c("COR", "GLM");
-store.truepos;
+names(store.rate) = c("COR", "GLM");
+
+return(list(store.truepos, store.rate));
+
 #summary(store.truepos);
 }
 
+# Run the simulation comparison 30 times
+set.seed(1348);
 test = compareGWASnTimes(n=30, X = X, qtn = 10);
-
-mean(test$COR)
-mean(test$GLM)
 ```
 
+Now that we have stored our true positive rates for each method in a variable "test", we can compute the summary statistics.
+
+```{r}
+mean(test[[2]]$COR);
+sd(test[[2]]$COR);
+mean(test[[2]]$GLM);
+sd(test[[2]]$GLM);
+```
+
+By these statistics, we can see that the standard deviation of the true positive rate for each method is comparable. The True Positive Rate is higher for the GWAS by GLM than the GWAS by Cor.
 
 
 # Extra Credit

@@ -1,4 +1,5 @@
 ## function library for HORT 545
+## All Credit goes to the lab of Dr. Zhiwu Zhao - http://www.zzlab.net/StaGen/2021/R/
 
 getStaGen545AbbreviationMeaning = function(abbrev){
   if(abbrev == "GBLUP"){
