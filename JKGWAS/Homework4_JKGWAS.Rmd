@@ -25,7 +25,7 @@ The class maize datasets were used for this assignment. They are available from 
 ```{r}
 source("http://www.zzlab.net/StaGen/2021/R/G2P.R")
 source("http://www.zzlab.net/StaGen/2021/R/GWASbyCor.R")
-library(JKGWAS)
+
 
 # Genotype Data
 X = read.csv(file = "./../datasets/mdp_numeric.txt", header = TRUE, sep ="");
@@ -41,6 +41,13 @@ SNP = read.csv(file = "./../datasets/mdp_SNP_information.txt", header = TRUE, se
 # Question 1 and 2
 \textbf{(1)	The package should contain at least three input: y, X , and C that are R objects of numeric data frame. Their dimensions are n by 1, n by m, and n by t corresponding to phenotype, genotype and covariate data, where n is number of individuals, m is number of markers, and t is number of covariates. The function should return probability values with dimension of 1 by m for the association tests between phenotype and markers. Markers are tested one at a time with covariates in C included as covariates (15 points).
 (2)	The package should perform PCA and incorporate PCs as cofactors for GWAS.  Your package should also automatically exclude the PCs that are in linear dependent to the covariates provided by users. (25 points).}
+
+```{r}
+#library(devtools)
+#install_github("lindseymaek/HORT545/JKGWAS")
+library(JKGWAS); #JKGWAS package
+```
+
 
 ## JKGWAS Summary
 
@@ -207,5 +214,25 @@ By these statistics, we can see that the standard deviation of the true positive
 \textbf{(6)	Demonstrate that your package is better than BLINK C version (http://zzlab.net/blink) on either statistical power or speed (25 points). }
 
 ```{r}
+## Loading packages and source code
+source("http://zzlab.net/GAPIT/GAPIT.library.R")
+source("http://zzlab.net/GAPIT/gapit_functions.txt")
+
+# myGD=mdp_numeric <- read.delim("~/Desktop/Data/mdp_numeric.txt")
+# myGM=mdp_SNP_information <- read.delim("~/Desktop/Data/mdp_SNP_information.txt", comment.char="#")
+# myCV=CROPS545_Covariates <- read.delim("~/Desktop/Data/CROPS545_Covariates.txt")
+
+## Phenotype simulation
+X=X[,-1];
+set.seed(99)
+mySim=GAPIT.Phenotype.Simulation(GD=X,GM=SNP,h2=.75,NQTN=10, effectunit =.95,QTNDist="normal",CV=CV);
+
+myGAPIT_BLINK = GAPIT(Y=mySim$Y,GD=X,GM=SNP, CV=CV, PCA.total = 3, QTN.position = mySim$QTN.position, model = "Blink",file.output = F)      ## GWAS with Blink
+
+GWAS_result = myGAPIT_BLINK$GWAS     ##Extracting the GWAS result from Blink
+GWAS_p_order = GWAS_result[order(GWAS_result$P.value, decreasing = FALSE),]  ## Sorting QTNs by their p-values
+GWAS_p_order_Bonferroni = p.adjust(GWAS_p_order$P.value,method = "bonferroni") ## bonferroni multiple test corrections
+pass_threshold <- GWAS_p_order[GWAS_p_order_Bonferroni < 0.05, ]   ## SNPs that pass 5% threshold after bonferroni correction
+pass_threshold       ## SNPs that pass 5% threshold
 ```
 

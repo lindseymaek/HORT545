@@ -33,163 +33,189 @@ h4.date { /* Header 4 - and the author and data headers use this too  */
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 
-<!-- test inserting image-->
-
 <center>
 
-![](JKGWAS_logo.png){#id .class width=300 height=300px}
+\begin{center}
+\textbf{Joshi Kornowske Genome Wide Association Study (JKGWAS)}\par
+\includegraphics[width = 0.3\textwidth]{JKGWAS/JKGWAS_logo.png}
+\end{center}
 
 </center>
-
-<p>&nbsp;</p>
-
-<center> <font size="6"> **Joshi Kornowske Genome Wide Association Study (JKGWAS)** </font> </center> 
-
-
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 
-### **Table of contents**
-#### Introduction LK
-#### Description of package functions PJ
-#### Getting started LK
-#### Required Inputes PJ
-#### Optional Inputes LK
-#### Outputs and Examples PB
-#### Examples with know QTNs LK
-#### Rapid run PB
-#### Rapid run options LK
-#### Frequently asked questions PB
-#### Further Information LK
 
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
+
+```{r include=FALSE}
+source("http://www.zzlab.net/StaGen/2021/R/G2P.R")
+source("http://www.zzlab.net/StaGen/2021/R/GWASbyCor.R")
+
+
+# Genotype Data
+X = read.csv(file = "datasets/mdp_numeric.txt", header = TRUE, sep ="");
+# Phenotype Data
+y = read.csv(file = "datasets/CROPS545_Phenotype.txt", header = TRUE, sep = "");
+# Covariates Data
+CV = read.csv(file = "datasets/CROPS545_Covariates.txt", header = TRUE, sep = "");
+# SNP information data
+SNP = read.csv(file = "datasets/mdp_SNP_information.txt", header = TRUE, sep = "");
+
+library(JKGWAS);
+```
+
 
 ### **Introduction**
 
-
+The JKGWAS package provides tools to conduct Genome Wide Association Study (GWAS) by generalized linear model (GLM) and to visualize the results. GWAS by GLM improves the true positive detection rate relative to GWAS by correlation and the functions provided in this package allow the user to model known covariates and principal components as fixed effects in addition to the numeric genomic data in order to improve phenotype prediction. Where applicable, issues related to modeling non-invertable matrices are automatically solved by detecting Principal Components with linear dependence on the covariates. GWAS results are easily visualized by QQ and Manhattan plot functions.
 
 ### **Description of package functions**
 
-
+This package "JKGWAS" contains a list of functions that you can find in the git repository and description of which is also mentioned in "JKGWAS_0.1.0.pdf". All the functions have their description, arguments and parameters clearly mentioned. When you install the package from github you can see the function and their description just by typing ??function_name in the R-console. This will let you know that what are the input parameters you need to give to get the output.
 
 ### **Getting started**
 
+The devtools package is required to download the JKGWAS package from Github. If the user has not installed devtools, they should do so by running the first line in the chunk below.
 
-```{r,warning=FALSE}
-#code to install package from github
-#install.packages("devtools")
-library(devtools)
+```{r,warning=FALSE, eval = FALSE}
+#install.packages("devtools", dependencies = TRUE);
+library(devtools);
 ```
-Next using the code below download and install the package GWhEAT from Github. The bottom two line of code in the chunk below make sure the dependencies GWhEAT relies on are also downloaded and installed. 
-```{r,warning=FALSE}
-#install package
-install_github("lindseymaek/HORT545/JKGWAS")
-library(JKGWAS)#package name
-```
-In order to have an effective tutorial you’ll need some data to play with, this code below downloads and loads into your environment data used for this tutorial. 
-```{r}
-if (!file.exists("GAPIT_Tutorial_Data.zip"))
-{
-  download.file("http://zzlab.net/GAPIT/GAPIT_Tutorial_Data.zip", destfile = "GAPIT_Tutorial_Data.zip")
-  unzip("GAPIT_Tutorial_Data.zip")
-}
-download.file("http://zzlab.net/GAPIT/data/CROP545_Covariates.txt", destfile = "CROPS545_Covariates.txt")
-download.file("http://zzlab.net/GAPIT/data/CROP545_Phenotype.txt", destfile = "CROPS545_Phenotype.txt")
-# Import the GAPIT demo data genotypes
-gt_scan <- data.frame(read.table("GAPIT_Tutorial_Data/mdp_numeric.txt", header = T, stringsAsFactors = F, sep = "\t", nrows = 1))
-classes <- sapply(gt_scan, class)
-genotypes <- data.frame(read.table("GAPIT_Tutorial_Data/mdp_numeric.txt", header = T, row.names = 1, colClasses = classes, stringsAsFactors = F, sep = "\t"))
-GM <- read.table("GAPIT_Tutorial_Data/mdp_SNP_information.txt", header = T, stringsAsFactors = F, sep = "\t")
-CV <- read.table("CROPS545_Covariates.txt", header = T, stringsAsFactors = F, sep = "\t")
-phenotypes <- read.table("CROPS545_Phenotype.txt", header = T, stringsAsFactors = F, sep = "\t")
-```
-### **Required Inputes**
 
-There are three data components required to run GWhEAT, the SNP data the phenotype(s) and a map showing the chromosome and positions of each SNP. The SNP data must be numeric coded as “0”, “1” and “2” where the 0 stands for homozygous for parent A, 2 stands for homozygous for parent B and 1 is for heterozygous SNP calls. Below is an example showing the first 5 rows and columns of our tutorial SNP data.
-```{r}
-genotypes[1:5,1:5]
-```
-The phenotype should be integers, negative or positive that correspond to each individual. Note: Below I have the head of the phenotype printed with the taxa column still included, before running GWhEAT you will need to remove the taxa column leaving only the phenotypic values for the function to work. 
-```{r}
-phenotypes[1:5,1:2]
-```
-The final piece of information needed for GWhEAT to work is a genetic map of the SNPs. This map must have the SNP name and the chromosome it’s on as well as the position on that chromosome. This genetic map is needed in order to produce the Manhattan plot of the results.
-```{r}
-GM[1:5,1:3]
-```
-### **Optional Inputes**
 
-The optional imputes for GWhEAT are the covariates which if used can help increases the power of the GWAS. The covariates mush be integers much like the phenotype values. Below is an example from the tutorial data.
-```{r}
-CV[1:5,1:3]
+Once devtools has been installed, the install$\_$github() function can be used to access the JKGWAS package. The following chunk will do this automatically.
+
+```{r,warning=FALSE, eval = FALSE}
+#install JKGWAS
+install_github("lindseymaek/HORT545/JKGWAS");
+library(JKGWAS);
 ```
-Other imputes include number of PCAs to use, with the default being set to three. The significance threshold (Cutoff) which can be set to the exact -log(10) of the p-value you want or the default of 0.05/number of SNPs. There are also some options you can use to suppress the plots automatically generated. To best show these options I will run a few examples below.  
+
+The JKGWAS package accepts genomic, phenotype, and covariate data, and visualizes these with genomic map data. Sample datasets may be found in the lindseymaek/HORT545 git repository, one level above the JKGWAS package. All credit for the curation of these datasets belongs to the Dr. Zhiwu Zhang laboratory; for more information on these data, the user should go to . The data are as follows: \par
+
+\textbullet CROPS545_Covariates.txt - Covariate (CV) data, with two factors \par
+\textbullet CROPS545_Phenotype.txt - Phenotype data \par
+\textbullet mdp_SNP_information.txt - Genomic map data \par
+\textbullet mdp_numeric.txt - Numeric genotype data, with column-wise snps \par
+
+Once downloaded to a local directory, import the data as follows:
+
+```{r eval = FALSE}
+## define the variable userDataDirectory as the path to the folder in which the datasets are stored
+userDataDirectory = c("Users/JKGWASdata/examplepath/")
+
+# covariate data
+CV = read.csv(file = "userDataDirectory/CROPS545_Covariates.txt", header = TRUE, sep = "");
+
+# genomic map data
+SNP = read.csv(file = "userDataDirectory/mdp_SNP_information.txt", header = TRUE, sep = "");
+
+# numeric genotype data
+X = read.csv(file = "userDataDirectory/mdp_numeric.txt", header = TRUE, sep ="");
+
+# phenotype data
+y = read.csv(file = "userDataDirectory/CROPS545_Phenotype.txt", header = TRUE, sep = "");
+```
+
+The variable names used here correspond to the names of the arguments in the JKGWAS functions. This is the data that will be used for the remainder of this tutorial.
+
+In order to simulate phenotype data with QTNs for a desired heritability value, we also recommend that you utilize the G2P() function also provided by the Zhang laboratory. This will be used later on in the tutorial.
+
+```{r eval = FALSE}
+#source G2P
+source("http://www.zzlab.net/StaGen/2021/R/G2P.R")
+```
+
+
+### **Required Inputs**
+
+There are three data components required to run the JKGLM() and JKPCA() functions in JKGWAS, the SNP/marker data, the phenotype data, and the genetic map data. The map data should contain columns having chromosome number and positions of each SNP. The JKGLM function will calculate the pvalues for each SNP as modeled by the user-inputs, these p-values are required inputs for, the JKQQ and JKManhattan functions. \par
+
+\textbullet \textbf{SNP/marker data} - The SNP data must be numeric coded as “0”, “1” and “2” where the 0 stands for homozygous for parent A, 2 stands for homozygous for parent B and 1 is for heterozygous SNP calls. Below is an example showing the first 5 rows and columns of our tutorial SNP data. 
+```{r}
+X[1:5,1:5] #SNP/marker data
+```
+
+\textbullet \textbf{Phenotype data} - The phenotypic data should be integers, negative or positive that correspond to each individual.To run the JKGLM function you should first remove the taxa column of the phenotypic data. Below is the first 5 column and row of phenotypic data we used in our tutorial.
+
+```{r}
+y[1:5,1:2]#phenotypic data
+```
+
+\textbullet \textbf{Genetic Map Data} - The other information needed to run JKGLM package is genetic map of the SNPs. The heading of this map data should have marker name,chromosome number and chromosome position.This piece of information will be needed to make manhattan plot.Below is the first 5 row of map data.
+
+```{r}
+SNP[1:5,1:3]# map data
+```
+
+
+### **Optional Inputs**
+
+\textbullet \textbf{Covariate data} - Finally we have included covariate data in the package. The covariates mush be integers much like the phenotype values. If you do not provide the covariate information then it can also run without the information by using other inputs. The covariate data should have information on factors. First r row of the covariate data id shown below.
+```{r}
+CV[1:5,1:3] #Covariate data
+```
+
+\textbullet \textbf{Principal Components} - Other imputs include the Principal Components, which can be generated from JKPCA(), or be provided by the user. The components must be organized columnwise, with an equal number of observations as X. The user can also determine the number of principal components to use, with the default being set to five. The significance threshold (Cutoff) which can be set to the exact -log(10) of the p-value you want or the default of 0.05/number of SNPs (Bonferroni Correction). There are also some options you can use to suppress the plots automatically generated. \par
+
+\textbullet \textbf{QTN} - The user can provide a vector of the positions of the known QTNs, in order to visualize the true positive detection rate by Manhattan plot with JKManhattan().
 
 ### **Outputs and Examples**
-Outputs from GWhEAT are a table with information on the PCA, Graphs showing variance explained by the PC, scatter plots of the PC used, a manhattan plot and a  QQ-plot. A csv file with all SNPs and associated p-values and a table with the power and type-1 error can also be included as outputs.
+After you use the JKGWAS package,the outputs you get includes information on principal components, p-values of the SNPs, manhattan plot, QQplot.We can also include the false positives as the output.Examples of the output are shown below.
 ```{r,warning=FALSE}
-phenotypes_n_1=phenotypes[,2]#remember to remove the first column from the phenotype data before running
-Example1=GWASapply(pheno=phenotypes_n_1, geno=genotypes,Cov=CV, GM=GM, PCA.M = 3, plots=TRUE, messages=TRUE, trait="Example1_phenotype")
+
+## Get Principal Components with JKPCA()
+PC = JKPCA(X, CV, npc = 10);
+## Perform GWAS by GLM with JKGLM()
+Pvals = JKGLM(X = X, y = y, CV, PC);
+## Visualize GWAS by QQ Plot with JKQQ()
+JKQQ(Pvals);
+## Visualize GWAS by Manhattan Plot with JKManhattan()
+JKManhattan(Pvals = Pvals, SNP = SNP,sigcutoff = NULL );
 ```
 
-### **Examples with know QTNs**
-In order to fully demonstrate GWhEAT functions, I am going to simulate some QTN effects using the function G2P. All G2Pis doing is generating effects and randomly assigning then to different SNPs. This will allow me to run GWhEAT and be able to determine it’s accuracy. 
-\
-\
-As we can see in the Manhattan plot and from the printed massages 8 significant SNPs were detected. 4 of them in black are true positives 2 in blue are false positives and the two in red are false negatives. Note some of the lines are very close to each other and can be hard to see which is why it’s nice to have messages = TRUE so that important findings are printed into the R console. 
 
-```{r,warning=FALSE}
-source("http://www.zzlab.net/StaGen/2020/R/G2P.R")
-NQTN = 6 #specify number of QTN
-h2 = 0.75 #heritability
-alpha = 0.6 #alpha value
-distribution = "normal" #specify distribution
-set.seed(66) # to get duplicatable results
-mySim=G2P(genotypes, h2, alpha, NQTN, distribution)
-Example2=GWASapply(pheno=mySim$y, geno=genotypes, GM=GM, PCA.M=3,QTN.position=mySim$QTN.position, plots=TRUE, messages=TRUE, trait="Example2_phenotype")
+### **Examples with known QTNs**
+
+If the user knows the QTNs, they can provide them to the JKManhattan() function. Alternatively, the G2P() function can be used to simulate QTNs. 
+
+```{r}
+
+G2P.sim = G2P(X= X,
+             h2= 0.75,
+             alpha=1,
+             NQTN=10,
+             distribution="norm");
+
+G2P.y = as.data.frame(G2P.sim$y);
+
+Pvals.sim = JKGLM(X = X, y = G2P.y, CV, PC);
+
+## Visualize GWAS by QQ Plot with JKQQ()
+JKQQ(Pvals.sim);
+
+## Visualize GWAS by Manhattan Plot with JKManhattan()
+JKManhattan(Pvals = Pvals.sim, SNP = SNP, sigcutoff = NULL, QTN = G2P.sim$QTN.position );
 ```
 
-###  **Rapid run**
-As sequencing data becomes more accessible and data sets become larger a necessity of GWAS packages is computational speed. In light of this we created a function within GWhEAT that runs the GWAS in a rapid manor called “GWASapply_rapid”. “GWASapply_rappid” works the same as GWASapply but will not print the Manhattan or other plots and is able to run more quickly.    
-```{r,warning=FALSE}
-Example3=GWASapply_rapid(pheno=phenotypes_n_1, geno=genotypes, Cov=CV, PCA.M = 3,cutoff=NULL)
-```
-
-###  **Rapid run options**
-
-After running GWASapply_rapid you can always create individual plots as shown below. The manhattan and QQ-plot functions allow flexibility in designing your own output.  
-
-```{r,warning=FALSE}
-manhattan_plot(GM,Example3$P.value.res, trait="manhattanPlot_Example3",FP = Example3$False.Positive, TP = Example3$True.Positive)
-qq_plot(GM,Example3$P.value.res,QTN.position, trait = "qq_plot_Example3")
-```
 
 ### **Frequently asked questions**
 
-1. Where can I get GWhEAT? GWhEAT is currently only available on github via Samuel Prather’s public repository found at https://github.com/stp4freedom/GWhEAT. 
-\
-\
-2. How to download GWhEAT? Please refer the “Getting started” section above where I show how to download and install GWhEAT using devtools.
-\
-\
-3. What SNP format does GWhEAT take? Currently GWhEAT only accepts SNP data in numerical form.
-\
-\
-4. What are the required inputs to run GWhEAT? You will need SNP data in numerical form, phenotypic data and a genetic map that has SNP name, Chromosome and position on chromosome. Without all three components GWhEAT will not be able to run successfully.
-\
-\
-5. How is GWASapply_rapid different than GWASapply? Both GWASapply and GWASapply_rapid run the calculations the same way. The only difference is GWAsapply_rapid will not give you any of the output automatically, which makes it run faster and allows the user the develop their own output.
-\
-\
-6. Where can I get help with issues regarding GWhEAT? All questions should be directed to Samuel Prather at stp4freedom@gmail.com.
-\
-\
-7. Are there other R packages that can perform GWAS? Yes, I would strongly recommend you check out the packaged GAPIT http://www.zzlab.net/GAPIT/ as it has a much wider range of options and functions.
+\textbf{1. Where can I get JKGWAS?} \par JKGWAS is currently available on github via Lindsey Kornowske's public repository found at https://github.com/lindseymaek/HORT545 \par
 
+\textbf{2. How do I download JKGWAS?}\par Please refer the “Getting started” section above where I show how to download and install JKGWAS using devtools. \par
+
+\textbf{3. What SNP format does JKGWAS take?} \par Currently JKGWAS functions only accept genomic SNP data in the numerical format. Non-numeric columns will be automatically detected and removed by the functions. \par
+
+\textbf{4. What are the required inputs to run JKGWAS?} \par You will need SNP data in numerical form, phenotypic data and a genetic map that has SNP name, Chromosome and position on chromosome. Covariate data is optional ,but the other three components are prerequisite to run JKGLM. The output of JKPCA(), can be used as an input for the PC argument of JKGLM(), and the output of JKGLM() can be used as the input for the Pvals argument of JKQQ() and JKManhattan().
+
+
+\textbf{5. Where can I get help with issues regarding JKGWAS} \par You can contact the two developer of this package Lindsey Kornowske, at lindsey.kornowske@wsu.edu and Pabitra Joshi at pabitrajoshi77@gmail.com if you have any questions.\par
+
+
+\textbf{6. Are there other R packages that can perform GWAS?} \par Yes, the GAPIT package, authored by the Dr. Zhiwu Zhang laboratory can be found at http://www.zzlab.net/GAPIT/ and has many advanced tools for GWAS and visualization. \par
 
 
 ### **Further Information**
 
-For more information on individual functions please see the “Reference_Manual.pdf” or type ?FUNCITON_NAME into the R console, this will pull up specific information of each function inside GWhEAT. For example typing ?manhattan_plot will pull of the help page with details about the function that creates the Manhattan plots.
+More information about GWAS, including sample data, publications, R packages, and more, can be found at the Zhiwu Zhang Laboratory Website: http://www.zzlab.net/index.html
+If you are a StaGen545 student from the future - good luck on homework 4, we challenge you to out-awesome the JKGWAS package logo.
