@@ -79,44 +79,134 @@ The JKGWAS package documentation is provided in a separate file, "JKGWAS$\_$0.1.
 
 \textbf{(4)	Perform GWAS on the data provided or your own data which must contain cofactors (15 points).}
 
+First, GWAS was performed with the phenotype data provided. In the Manhattan plot below, we can see that 4 SNP were detected, but because we do not have information about the QTNs, we do not know whether these significant observations represent true positives or not. Next, we use a simulated phenotype to better assess the performance of the JKGWAS approach.
+
+## GWAS with provided phenotype data
+
 ```{r}
 ## Get Principal Components with JKPCA()
 PC = JKPCA(X, CV, npc = 10);
 
 ## Perform GWAS by GLM with JKGLM()
 Pvals = JKGLM(X = X, y = y, CV, PC);
-
-## Visualize GWAS by QQ Plot with JKQQ()
-JKQQ(Pvals);
-
-## Visualize GWAS by Manhattan Plot with JKManhattan()
-JKManhattan(Pvals = Pvals, SNP = SNP,sigcutoff = NULL );
-
 ```
-First, GWAS was performed with the phenotype data provided. In the Manhattan plot below, we can see that 3 SNP were detected, but because we do not have information about the QTNs, we do not know whether these significant observations represent true positives or not. Next, we use a simulated phenotype to better assess the performance of the JKGWAS approach.
 
-## QTN Simulation
+### QQ Plot
 
 ```{r}
+## Visualize GWAS by QQ Plot with JKQQ()
+JKQQ(Pvals);
+```
+
+### Genome-wide Threshold
+
+With the Bonferroni correction, our threshold is as follows:
+
+```{r}
+sig.threshold = 0.05/length(Pvals);
+sig.threshold;
+```
+
+### List of Associated SNP
+
+Because the genomic data and SNP data are in the same order, we can index the significant p-values in the SNP data.
+
+```{r}
+SNP[Pvals<sig.threshold,];
+```
+
+### MAF of Associated SNP
+
+```{r}
+X.num = dplyr::select_if(X, is.numeric); 
+
+#save associated SNP genomic data to dataframe
+SNP.GD = X.num[,Pvals<sig.threshold];
+
+#calculate MAF and store in array
+MAF = apply(SNP.GD, 2, function(x)
+  {
+  allele.freq1 = (sum(x==0)*2 + sum(x==1))/(sum(!is.na(x))*2);
+  allele.freq2 = (sum(x==2)*2 + sum(x==1))/(sum(!is.na(x))*2);
+  
+  return(min(allele.freq1, allele.freq2));
+  })
+
+MAF;
+
+```
+
+
+### Manhattan Plot
+
+```{r}
+## Visualize GWAS by Manhattan Plot with JKManhattan()
+JKManhattan(Pvals = Pvals, SNP = SNP,sigcutoff = NULL );
+```
+
+
+## GWAS with simulated phenotype
+
+```{r}
+#simulate phenotype with heritability value 0.75
 G2P.sim = G2P(X= X,
              h2= 0.75,
              alpha=1,
              NQTN=qtn,
              distribution="norm");
 
+#save the phenotype to variable for the JKGLM() function
 G2P.y = as.data.frame(G2P.sim$y);
 
+#perform GWAS by GLM with JKGLM
 Pvals.sim = JKGLM(X = X, y = G2P.y, CV, PC);
+```
 
+### QQ Plot
+
+```{r}
 ## Visualize GWAS by QQ Plot with JKQQ()
 JKQQ(Pvals.sim);
+```
 
+
+### List of Associated SNP
+
+```{r}
+SNP[Pvals.sim<sig.threshold,];
+```
+
+### MAF of Associated SNP
+
+```{r}
+
+#save associated SNP genomic data to dataframe
+SNP.GD = X.num[,Pvals.sim<sig.threshold];
+
+#calculate MAF and store in array
+MAF = apply(SNP.GD, 2, function(x)
+  {
+  allele.freq1 = (sum(x==0)*2 + sum(x==1))/(sum(!is.na(x))*2);
+  allele.freq2 = (sum(x==2)*2 + sum(x==1))/(sum(!is.na(x))*2);
+  
+  return(min(allele.freq1, allele.freq2));
+  })
+
+MAF;
+```
+
+
+### Manhattan Plot
+
+```{r}
 ## Visualize GWAS by Manhattan Plot with JKManhattan()
 JKManhattan(Pvals = Pvals.sim, SNP = SNP, sigcutoff = NULL, QTN = G2P.sim$QTN.position );
 
 ```
 
 If we use a simulated phenotype instead of the provided phenotype data, 50% of our 10 QTN are detected correctly. With 5 QTN detected out of 8 significant SNPs total, that is a True Positive rate of 62.5%.
+
+
 
 # Question 5
 
@@ -150,18 +240,22 @@ G2P.sim = G2P(X= X,
 # get QTN positions in GD data
 G2P.sim.qtn = G2P.sim$QTN.position;
 
+
 #get vector of pvals
 #by correlation
 p.list.cor = GWASbyCor(X, G2P.sim$y);
 p.list.cor = as.matrix(t(p.list.cor));
 
 y = as.data.frame(G2P.sim$y);
+
+
 #by glm
 p.list.glm = JKGLM(X, y, CV, PC);
 p.list.glm = as.matrix(p.list.glm)
 
 p.df = as.data.frame(cbind(p.list.cor, p.list.glm));
 names(p.df) = c("COR", "GLM");
+
 
 nc = ncol(p.df);
 for(j in 1:nc){
@@ -204,6 +298,7 @@ mean(test[[2]]$COR);
 sd(test[[2]]$COR);
 mean(test[[2]]$GLM);
 sd(test[[2]]$GLM);
+
 ```
 
 By these statistics, we can see that the standard deviation of the true positive rate for each method is comparable. The True Positive Rate is higher for the GWAS by GLM than the GWAS by Cor.
@@ -215,19 +310,20 @@ By these statistics, we can see that the standard deviation of the true positive
 
 ```{r}
 ## Loading packages and source code
+source("http://zzlab.net/GAPIT/gapit_functions.txt");
 source("http://zzlab.net/GAPIT/GAPIT.library.R")
-source("http://zzlab.net/GAPIT/gapit_functions.txt")
+
 
 # myGD=mdp_numeric <- read.delim("~/Desktop/Data/mdp_numeric.txt")
 # myGM=mdp_SNP_information <- read.delim("~/Desktop/Data/mdp_SNP_information.txt", comment.char="#")
 # myCV=CROPS545_Covariates <- read.delim("~/Desktop/Data/CROPS545_Covariates.txt")
 
 ## Phenotype simulation
-X=X[,-1];
-set.seed(99)
-mySim=GAPIT.Phenotype.Simulation(GD=X,GM=SNP,h2=.75,NQTN=10, effectunit =.95,QTNDist="normal",CV=CV);
 
-myGAPIT_BLINK = GAPIT(Y=mySim$Y,GD=X,GM=SNP, CV=CV, PCA.total = 3, QTN.position = mySim$QTN.position, model = "Blink",file.output = F)      ## GWAS with Blink
+set.seed(99);
+mySim=GAPIT.Phenotype.Simulation(GD=X.num,GM=SNP,h2=.75,NQTN=10, effectunit =.95,QTNDist="normal",CV=CV);
+
+myGAPIT_BLINK = GAPIT(Y=mySim$Y,GD=X.num,GM=SNP, CV=CV, PCA.total = 3, QTN.position = mySim$QTN.position, model = "Blink",file.output = F)      ## GWAS with Blink
 
 GWAS_result = myGAPIT_BLINK$GWAS     ##Extracting the GWAS result from Blink
 GWAS_p_order = GWAS_result[order(GWAS_result$P.value, decreasing = FALSE),]  ## Sorting QTNs by their p-values

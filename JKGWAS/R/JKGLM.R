@@ -14,7 +14,7 @@
 
 JKGLM = function(X, y, CV=NULL, PC=NULL){
   
-  X = dplyr::select_if(X, is.numeric);
+  X = dplyr::select_if(X, is.numeric); 
   y = dplyr::select_if(y, is.numeric);
 
   #get dimensions of X

@@ -15,11 +15,11 @@
 
 JKQQ = function(Pvals){
 
-  np=length(Pvals)
-  set.seed(9);
-  p.uni=runif(np,0,1);
+  np=length(Pvals);
+  p.uni=runif(np,0,1); #generate expected pvalues 
   order.obs=order(Pvals)
   order.uni=order(p.uni)
+  #plot pvalues expected against observed
   plot(-log10(p.uni[order.uni]),-log10(Pvals[order.obs]),
        main="QQPlot",
        xlab = "Expected",

@@ -14,20 +14,22 @@
 
 JKPCA = function(X,CV = NULL, npc = 5){
   X = dplyr::select_if(X, is.numeric);
-  jkpca = prcomp(X);
-  pc = jkpca$x;
-  pc = pc[,c(1:npc)]; 
-  pc.out = pc;
+  jkpca = prcomp(X); #perform pca with prcomp() defaults
+  pc = jkpca$x; #save principal component information
+  pc = pc[,c(1:npc)]; #filter for number of desired pc
+  pc.out = pc; #if no CV, pca is computed and returned
   
   if(!is.null(CV)){
     
   CV = dplyr::select_if(CV, is.numeric);
   JKmatrix = as.matrix(cbind(CV, pc));
   nc = ncol(CV)+1;
+  #determine linear dependence by matrix rank with successive removal of PCs
   rankByRemoved <- sapply(nc:ncol(JKmatrix), function (x) qr(JKmatrix[,-x])$rank);
+  #identify columns which, if removed, do not change the rank and are therefore dependent
   removeIDs = which(rankByRemoved == max(rankByRemoved));
   
-  #dependent.free = mgcv::fixDependence(X1 = CV, X2 = pc, strict = FALSE,tol = );
+  #filter these columns from the PC matrix
   pc.out = pc[,-c(removeIDs)];
   
   }
